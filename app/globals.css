@@ -1,0 +1,274 @@
+@import "tailwindcss";
+
+:root {
+  --background: #121212;
+  --foreground: #f5f5f5;
+  --gold: #d1c905;
+  --panel: #1a1a1a;
+  --panel-alt: #222222;
+  --panel-muted: #2b2b2b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-noto-sans);
+  --font-title: var(--font-bebas);
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-noto-sans), Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-bebas), Arial, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #1b1b1b;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.standings-table th,
+.standings-table td {
+  border: none;
+  padding: 1.1rem 1.4rem;
+  text-align: left;
+}
+
+.standings-table thead th {
+  background: #171717;
+  color: #f7f7f7;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.standings-table tbody tr:nth-child(odd) {
+  background: #1d1d1d;
+}
+
+.standings-table tbody tr:nth-child(even) {
+  background: #2a2a2a;
+}
+
+.standings-table tbody tr:hover {
+  background: #2d2a10;
+}
+
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea,
+.admin-shell button {
+  font-family: var(--font-noto-sans), Arial, sans-serif;
+}
+
+.admin-shell .admin-nav-link {
+  color: #f5f5f5;
+}
+
+.admin-shell .admin-nav-link:hover,
+.admin-shell .admin-nav-link:focus-visible {
+  color: #ffffff;
+  background: #222222;
+}
+
+.admin-shell {
+  color-scheme: dark;
+  background: #121212;
+  color: #f5f5f5;
+}
+
+.admin-shell * {
+  box-sizing: border-box;
+}
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6 {
+  color: #ffffff;
+  font-family: var(--font-bebas), Arial, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.admin-shell p,
+.admin-shell span,
+.admin-shell label,
+.admin-shell li,
+.admin-shell dd,
+.admin-shell dt,
+.admin-shell td,
+.admin-shell th {
+  color: inherit;
+}
+
+.admin-shell a {
+  color: #d1c905;
+}
+
+.admin-shell a:hover,
+.admin-shell a:focus-visible {
+  color: #f2ec80;
+}
+
+.admin-shell [class*="bg-white"],
+.admin-shell [class*="bg-slate-"],
+.admin-shell [class*="bg-emerald-"],
+.admin-shell [class*="bg-rose-"],
+.admin-shell [class*="bg-red-"],
+.admin-shell [class*="bg-sky-"],
+.admin-shell [class*="bg-blue-"],
+.admin-shell [class*="bg-violet-"],
+.admin-shell [class*="bg-cyan-"],
+.admin-shell [class*="bg-fuchsia-"],
+.admin-shell [class*="bg-indigo-"],
+.admin-shell [class*="bg-amber-"],
+.admin-shell [class*="bg-gray-"],
+.admin-shell [class*="bg-zinc-"],
+.admin-shell [class*="bg-neutral-"] {
+  background-color: #171717 !important;
+}
+
+.admin-shell .rounded,
+.admin-shell .rounded-lg,
+.admin-shell .rounded-2xl,
+.admin-shell .rounded-xl,
+.admin-shell .border,
+.admin-shell [class*="border-slate-"],
+.admin-shell [class*="border-rose-"],
+.admin-shell [class*="border-emerald-"],
+.admin-shell [class*="border-red-"],
+.admin-shell [class*="border-sky-"],
+.admin-shell [class*="border-blue-"],
+.admin-shell [class*="border-violet-"],
+.admin-shell [class*="border-cyan-"],
+.admin-shell [class*="border-fuchsia-"],
+.admin-shell [class*="border-indigo-"],
+.admin-shell [class*="border-amber-"],
+.admin-shell [class*="border-gray-"],
+.admin-shell [class*="border-zinc-"],
+.admin-shell [class*="border-neutral-"] {
+  border-color: #2b2b2b !important;
+}
+
+.admin-shell table,
+.admin-shell .admin-main table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #1b1b1b;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.admin-shell thead th,
+.admin-shell .admin-main thead th {
+  background: #171717;
+  color: #f7f7f7;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-shell th,
+.admin-shell td,
+.admin-shell .admin-main th,
+.admin-shell .admin-main td {
+  border: none;
+  padding: 1rem 1.2rem;
+  text-align: left;
+}
+
+.admin-shell tbody tr:nth-child(odd),
+.admin-shell .admin-main tbody tr:nth-child(odd) {
+  background: #1d1d1d;
+}
+
+.admin-shell tbody tr:nth-child(even),
+.admin-shell .admin-main tbody tr:nth-child(even) {
+  background: #2a2a2a;
+}
+
+.admin-shell tbody tr:hover,
+.admin-shell .admin-main tbody tr:hover {
+  background: #2d2a10;
+}
+
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea {
+  background: #101010;
+  color: #ffffff;
+  border: 1px solid #3a3a3a;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: #a3a3a3;
+}
+
+.admin-shell button,
+.admin-shell .admin-main button,
+.admin-shell form button {
+  border-radius: 0.5rem;
+  transition: opacity 0.2s ease;
+}
+
+.admin-shell button:hover,
+.admin-shell .admin-main button:hover,
+.admin-shell form button:hover {
+  opacity: 0.94;
+}
+
+.admin-shell .text-slate-500,
+.admin-shell .text-slate-600,
+.admin-shell .text-slate-700,
+.admin-shell .text-slate-800,
+.admin-shell .text-slate-900,
+.admin-shell .text-gray-700,
+.admin-shell .text-gray-600,
+.admin-shell .text-gray-500 {
+  color: #d9d9d9 !important;
+}
+
+.admin-shell .text-blue-600,
+.admin-shell .text-blue-700,
+.admin-shell .text-blue-800 {
+  color: #d1c905 !important;
+}
+
+.standings-table tbody td {
+  color: #f5f5f5;
+}
+
+.standings-table tbody td:first-child,
+.standings-table thead th:first-child {
+  padding-left: 1.25rem;
+}
+
+.standings-table tbody td:last-child,
+.standings-table thead th:last-child {
+  padding-right: 1.25rem;
+}
