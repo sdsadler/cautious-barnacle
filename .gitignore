@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# docs
+/docs
+
+#ai
+/ai
+
 # next.js
 /.next/
 /out/
