@@ -1,60 +1,109 @@
-This is a Supabase-backed Next.js esports league management application for seasons, events, matches, standings, imports, and admin operations.
+﻿#  Fortnite Standings
 
-## Project documentation
+ Fortnite Standings is a full-stack esports league management application built for tracking public standings, season results, team and player performance, and administrative operations for a Fortnite competition structure.
 
-Before making changes, review the project docs in this repository:
+The app combines a modern Next.js frontend with a Supabase PostgreSQL data layer to support a complete season workflow: schools and teams register players, events and matches are recorded, results are imported and validated, and public leaderboard pages show live standings for players, teams, and schools.
 
-- [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md)
-- [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)
-- [docs/STANDINGS_RULES.md](docs/STANDINGS_RULES.md)
-- [docs/TODO.md](docs/TODO.md)
-- [docs/ARCHITECTURE_REVIEW.md](docs/ARCHITECTURE_REVIEW.md)
-- [docs/API_PATTERNS.md](docs/API_PATTERNS.md)
-- [docs/SQL_CONVENTIONS.md](docs/SQL_CONVENTIONS.md)
-- [docs/CHANGELOG.md](docs/CHANGELOG.md)
-- [docs/STANDINGS_ARCHITECTURE.md](docs/STANDINGS_ARCHITECTURE.md)
+## Project purpose
 
-## Pre-UX technical debt summary
+This project exists to help manage a school-based Fortnite league from both the public and administrative sides:
 
-The project has reached a usable operational state, but the most important follow-up work is not a visual redesign. The team should finish the following before expanding the UI:
+- public-facing standings pages for players, teams, and schools
+- season, event, and match filtering for leaderboard views
+- drilldown pages for detailed team, school, and player summaries
+- admin tools for managing seasons, events, matches, players, and scoring configuration
+- CSV import workflows for bulk player and results data
+- data integrity checks for unmatched results, alias resolution, and safer admin actions
 
-- centralize standings and season-selection logic
-- keep scoring configuration as the source of truth across pages
-- harden delete and cleanup workflows for matches and events
-- reduce route-local duplication in admin and standings flows
-- document schema and import changes before broad UX refinements
+## Core domain model
 
-## Getting Started
+The application is organized around the core esports hierarchy:
 
-First, run the development server:
+- Season
+  - Event
+    - Match
+      - Results
+- School
+  - Team
+    - Player
+
+This structure keeps standings and import workflows tied to the right seasonal context while preserving normalized relationships between schools, teams, and players.
+
+## Key features
+
+- Player, team, and school standings with season-aware rankings
+- Drilldown views that show roster and performance details
+- Filtered standings across season, event, and match scope
+- CSV imports for player records and match results
+- Alias and unmatched-result handling for cleaner result reconciliation
+- Admin dashboard and management screens for league operations
+- Route and state stability for public and admin workflows
+- Dark-themed, league-branded presentation for standings pages and management experiences
+
+## Technology stack
+
+- Next.js App Router
+- TypeScript
+- React 19
+- Tailwind CSS
+- Supabase PostgreSQL
+- ESLint and project-based validation tooling
+
+## Repository structure
+
+- app/ - Next.js App Router pages and layouts
+- components/ - UI components shared across standings and admin pages
+- lib/ - data access, helpers, and shared logic
+- docs/ - project documentation, schema notes, standings rules, and architecture guidance
+- supabase/ - database-related SQL and migration context when applicable
+
+## Local development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the app in development mode:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+The repository includes supporting documentation for the league system and app architecture:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- docs/PROJECT_CONTEXT.md
+- docs/DATABASE_SCHEMA.md
+- docs/STANDINGS_RULES.md
+- docs/TODO.md
+- docs/ARCHITECTURE_REVIEW.md
+- docs/API_PATTERNS.md
+- docs/SQL_CONVENTIONS.md
+- docs/CHANGELOG.md
+- docs/STANDINGS_ARCHITECTURE.md
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+These documents are intended to be reviewed before making changes so that the standings logic, database model, and business rules remain consistent.
 
-## Deploy on Vercel
+## Design and business philosophy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The project emphasizes:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- normalized database relationships and clean schema design
+- centralized standings and scoring logic instead of duplicated page-level calculations
+- safe admin workflows with explicit validation and protection against destructive actions
+- maintainability, data integrity, and predictable behavior over cosmetic-only changes
+
+## Status
+
+This project is operating as a functional esports management platform and is designed to support real league season workflows, not just a static leaderboard mockup.
