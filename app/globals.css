@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Bebas Neue";
+  src: url("/fonts/bebas-neue-v16-latin-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("/fonts/noto-sans-v42-latin-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("/fonts/noto-sans-v42-latin-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("/fonts/noto-sans-v42-latin-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("/fonts/noto-sans-v42-latin-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #121212;
   --foreground: #f5f5f5;
@@ -7,6 +47,8 @@
   --panel: #1a1a1a;
   --panel-alt: #222222;
   --panel-muted: #2b2b2b;
+  --font-bebas: "Bebas Neue", Arial, sans-serif;
+  --font-noto-sans: "Noto Sans", Arial, sans-serif;
 }
 
 @theme inline {
