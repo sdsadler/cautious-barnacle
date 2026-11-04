@@ -1,6 +1,7 @@
 import Link from "next/link";
 import EmptyState from "@/components/EmptyState";
 import StandingsFilterForm from "@/components/StandingsFilterForm";
+import { getTeamPointsCount } from "@/lib/scoring";
 import {
   getTeamStandingsForSeason,
   resolveStandingsScope,
@@ -22,6 +23,11 @@ const standingsCards = [
     href: "/standings/schools",
     description: "School leaderboard",
   },
+  {
+    title: "Scoring rules",
+    href: "/standings/scoring",
+    description: "Season scoring rules",
+  },
 ];
 
 export default async function TeamStandingsPage({
@@ -36,7 +42,7 @@ export default async function TeamStandingsPage({
 
   if (!season) {
     return (
-      <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+      <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
           <EmptyState
             title="No season available"
@@ -49,14 +55,13 @@ export default async function TeamStandingsPage({
     );
   }
 
-  const standings = await getTeamStandingsForSeason(
-    season.id,
-    selectedEventId,
-    selectedMatchId,
-  );
+  const [standings, teamPointsCount] = await Promise.all([
+    getTeamStandingsForSeason(season.id, selectedEventId, selectedMatchId),
+    getTeamPointsCount(season.id),
+  ]);
 
   return (
-    <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+    <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 text-center">
           <h1 className="text-5xl leading-none text-[#f3f3f3] md:text-6xl">
@@ -65,7 +70,7 @@ export default async function TeamStandingsPage({
           <p className="mt-3 text-lg text-[#d9d9d9]">{season.name}</p>
         </header>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
+        <div className="mb-8 grid gap-4 md:grid-cols-4">
           {standingsCards.map((card) => {
             const isActive = card.href === "/standings/teams";
             return (
@@ -92,6 +97,10 @@ export default async function TeamStandingsPage({
           selectedEventId={selectedEventId}
           selectedMatchId={selectedMatchId}
         />
+
+        <div className="mb-4 text-sm text-[#d9d9d9]">
+          Team points are based on the top {teamPointsCount} players on each team.
+        </div>
 
         {standings.length === 0 ? (
           <EmptyState

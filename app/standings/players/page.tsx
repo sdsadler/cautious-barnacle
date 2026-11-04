@@ -22,6 +22,11 @@ const standingsCards = [
     href: "/standings/schools",
     description: "School leaderboard",
   },
+  {
+    title: "Scoring rules",
+    href: "/standings/scoring",
+    description: "Season scoring rules",
+  },
 ];
 
 export default async function PlayerStandingsPage({
@@ -36,7 +41,7 @@ export default async function PlayerStandingsPage({
 
   if (!season) {
     return (
-      <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+      <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
         <div className="mx-auto max-w-7xl">
           <EmptyState
             title="No season available"
@@ -56,7 +61,7 @@ export default async function PlayerStandingsPage({
   );
 
   return (
-    <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+    <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 text-center">
           <h1 className="text-5xl leading-none text-[#f3f3f3] md:text-6xl">
@@ -65,7 +70,7 @@ export default async function PlayerStandingsPage({
           <p className="mt-3 text-lg text-[#d9d9d9]">{season.name}</p>
         </header>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
+        <div className="mb-8 grid gap-4 md:grid-cols-4">
           {standingsCards.map((card) => {
             const isActive = card.href === "/standings/players";
             return (

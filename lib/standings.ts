@@ -1,3 +1,4 @@
+import { getTeamPointsCount } from "@/lib/scoring";
 import { supabase } from "@/lib/supabase";
 
 export type SeasonOption = {
@@ -130,10 +131,12 @@ export async function resolveSeasonSelection(
     ? seasons.find((entry) => entry.id === requestedSeasonId) ?? null
     : null;
 
+  const activeSeasons = seasons.filter((entry) => entry.active);
   const season =
     requestedSeason ??
+    resolveCurrentSeasonFromDate(activeSeasons) ??
+    activeSeasons[0] ??
     resolveCurrentSeasonFromDate(seasons) ??
-    seasons.find((entry) => entry.active) ??
     seasons[0] ??
     null;
 
@@ -565,6 +568,20 @@ export async function getPlayerStandingsForSeason(
   return standings;
 }
 
+function getTopPlayerPointTotal(pointsByPlayer: Array<{ playerId: number; points: number }>, teamPointsCount: number): number {
+  const sortedPlayers = [...pointsByPlayer].sort((left, right) => {
+    if (right.points !== left.points) {
+      return right.points - left.points;
+    }
+
+    return left.playerId - right.playerId;
+  });
+
+  return sortedPlayers
+    .slice(0, Math.max(1, teamPointsCount))
+    .reduce((sum, entry) => sum + entry.points, 0);
+}
+
 export async function getTeamRosterForSeason(
   teamId: number,
   seasonId: number,
@@ -634,7 +651,11 @@ export async function getTeamRosterForSeason(
     };
   });
 
-  const totalPoints = members.reduce((sum, member) => sum + member.points, 0);
+  const teamPointsCount = await getTeamPointsCount(seasonId);
+  const totalPoints = getTopPlayerPointTotal(
+    members.map((member) => ({ playerId: member.playerId, points: member.points })),
+    teamPointsCount,
+  );
   const totalEliminations = members.reduce((sum, member) => sum + member.totalEliminations, 0);
   const matchesPlayed = members.reduce((sum, member) => sum + member.matchesPlayed, 0);
   const placementTotal = members.reduce((sum, member) => sum + (member.averagePlacement * member.matchesPlayed), 0);
@@ -695,8 +716,9 @@ export async function getTeamStandingsForSeason(
   }
 
   const playerMetrics = await getSeasonResultMetrics(seasonId, eventId, matchId);
+  const teamPointsCount = await getTeamPointsCount(seasonId);
 
-  const teamPoints = new Map<number, number>();
+  const teamPlayerPoints = new Map<number, { playerId: number; points: number }[]>();
   const teamElims = new Map<number, number>();
   const teamPlacementTotal = new Map<number, number>();
   const teamPlacementCount = new Map<number, number>();
@@ -714,7 +736,10 @@ export async function getTeamStandingsForSeason(
     };
 
     const teamId = registration.team_id;
-    teamPoints.set(teamId, (teamPoints.get(teamId) ?? 0) + metrics.totalPoints);
+    const playerScores = teamPlayerPoints.get(teamId) ?? [];
+    playerScores.push({ playerId: registration.player_id, points: metrics.totalPoints });
+    teamPlayerPoints.set(teamId, playerScores);
+
     teamElims.set(teamId, (teamElims.get(teamId) ?? 0) + metrics.totalEliminations);
     teamPlacementTotal.set(teamId, (teamPlacementTotal.get(teamId) ?? 0) + metrics.placementTotal);
     teamPlacementCount.set(teamId, (teamPlacementCount.get(teamId) ?? 0) + metrics.placementCount);
@@ -734,7 +759,7 @@ export async function getTeamStandingsForSeason(
       school: string;
       team_name: string;
     }) => {
-      const points = teamPoints.get(team.id) ?? 0;
+      const points = getTopPlayerPointTotal(teamPlayerPoints.get(team.id) ?? [], teamPointsCount);
       const placementCount = teamPlacementCount.get(team.id) ?? 0;
 
       return {
@@ -1002,6 +1027,7 @@ export async function getSchoolRosterForSeason(
   }
 
   const playerMetrics = await getSeasonResultMetrics(seasonId, eventId, matchId);
+  const teamPointsCount = await getTeamPointsCount(seasonId);
   const teamsWithMembers = teams.map((team) => ({
     id: team.id,
     teamName: team.team_name,
@@ -1059,23 +1085,30 @@ export async function getSchoolRosterForSeason(
     teamInfo.placementCount += metrics.placementCount;
   }
 
-  const orderedTeams = teamsWithMembers.map((team) => ({
-    id: team.id,
-    teamName: team.teamName,
-    totalPoints: team.totalPoints,
-    averagePlacement: team.placementCount > 0 ? team.placementTotal / team.placementCount : 0,
-    totalEliminations: team.totalEliminations,
-    matchesPlayed: team.matchesPlayed,
-    members: team.members.sort((left, right) => {
-      if (right.points !== left.points) {
-        return right.points - left.points;
-      }
-      if (right.totalEliminations !== left.totalEliminations) {
-        return right.totalEliminations - left.totalEliminations;
-      }
-      return left.playerName.localeCompare(right.playerName);
-    }),
-  })).sort((left, right) => {
+  const orderedTeams = teamsWithMembers.map((team) => {
+    const totalPoints = getTopPlayerPointTotal(
+      team.members.map((member) => ({ playerId: member.playerId, points: member.points })),
+      teamPointsCount,
+    );
+
+    return {
+      id: team.id,
+      teamName: team.teamName,
+      totalPoints,
+      averagePlacement: team.placementCount > 0 ? team.placementTotal / team.placementCount : 0,
+      totalEliminations: team.totalEliminations,
+      matchesPlayed: team.matchesPlayed,
+      members: team.members.sort((left, right) => {
+        if (right.points !== left.points) {
+          return right.points - left.points;
+        }
+        if (right.totalEliminations !== left.totalEliminations) {
+          return right.totalEliminations - left.totalEliminations;
+        }
+        return left.playerName.localeCompare(right.playerName);
+      }),
+    };
+  }).sort((left, right) => {
     if (right.totalPoints !== left.totalPoints) {
       return right.totalPoints - left.totalPoints;
     }
@@ -1142,6 +1175,8 @@ export async function getSchoolStandingsForSeason(
   const teamElims = new Map<number, number>();
   const teamPlacementTotal = new Map<number, number>();
   const teamPlacementCount = new Map<number, number>();
+  const teamPlayerPoints = new Map<number, { playerId: number; points: number }[]>();
+  const teamPointsCount = await getTeamPointsCount(seasonId);
 
   for (const registration of registrations ?? []) {
     if (!registration.team_id) {
@@ -1156,10 +1191,17 @@ export async function getSchoolStandingsForSeason(
     };
 
     const teamId = registration.team_id;
-    teamPoints.set(teamId, (teamPoints.get(teamId) ?? 0) + metrics.totalPoints);
+    const playerScores = teamPlayerPoints.get(teamId) ?? [];
+    playerScores.push({ playerId: registration.player_id, points: metrics.totalPoints });
+    teamPlayerPoints.set(teamId, playerScores);
+
     teamElims.set(teamId, (teamElims.get(teamId) ?? 0) + metrics.totalEliminations);
     teamPlacementTotal.set(teamId, (teamPlacementTotal.get(teamId) ?? 0) + metrics.placementTotal);
     teamPlacementCount.set(teamId, (teamPlacementCount.get(teamId) ?? 0) + metrics.placementCount);
+  }
+
+  for (const [teamId, scores] of teamPlayerPoints.entries()) {
+    teamPoints.set(teamId, getTopPlayerPointTotal(scores, teamPointsCount));
   }
 
   const schoolMap = new Map<

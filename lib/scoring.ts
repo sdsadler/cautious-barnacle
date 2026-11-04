@@ -8,27 +8,21 @@ export type PlacementScoringRule = {
 };
 
 export type ScoringConfig = {
+  seasonId?: number | null;
   eliminationPoints: number;
+  teamPointsCount: number;
   placementRules: PlacementScoringRule[];
 };
 
-export async function getPlacementScoringRules(): Promise<PlacementScoringRule[]> {
-  const { data, error } = await supabase
-    .from("placement_scoring")
-    .select("id, min_place, max_place, points")
-    .order("min_place", { ascending: true });
-
-  if (error) {
-    throw error;
+export async function getScoringRuleRow(seasonId?: number | null) {
+  if (seasonId === undefined || seasonId === null) {
+    return null;
   }
 
-  return (data ?? []) as PlacementScoringRule[];
-}
-
-export async function getEliminationPoints(): Promise<number> {
   const { data, error } = await supabase
     .from("scoring_rules")
-    .select("id, elimination_points")
+    .select("id, elimination_points, team_points_count, season_id")
+    .eq("season_id", seasonId)
     .order("id", { ascending: true })
     .limit(1);
 
@@ -36,23 +30,55 @@ export async function getEliminationPoints(): Promise<number> {
     throw error;
   }
 
-  return Number(data?.[0]?.elimination_points ?? 0);
+  return (data ?? [])[0] ?? null;
 }
 
-export async function getScoringConfig(): Promise<ScoringConfig> {
-  const [placementRules, eliminationPoints] = await Promise.all([
-    getPlacementScoringRules(),
-    getEliminationPoints(),
+export async function getPlacementScoringRules(seasonId?: number | null): Promise<PlacementScoringRule[]> {
+  if (seasonId === undefined || seasonId === null) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("placement_scoring")
+    .select("id, min_place, max_place, points, season_id")
+    .eq("season_id", seasonId)
+    .order("min_place", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+  return (data ?? []) as PlacementScoringRule[];
+}
+
+export async function getEliminationPoints(seasonId?: number | null): Promise<number> {
+  const row = await getScoringRuleRow(seasonId);
+
+  return Number(row?.elimination_points ?? 0);
+}
+
+export async function getTeamPointsCount(seasonId?: number | null): Promise<number> {
+  const row = await getScoringRuleRow(seasonId);
+
+  return Number(row?.team_points_count ?? 0);
+}
+
+export async function getScoringConfig(seasonId?: number | null): Promise<ScoringConfig> {
+  const [placementRules, eliminationPoints, teamPointsCount] = await Promise.all([
+    getPlacementScoringRules(seasonId),
+    getEliminationPoints(seasonId),
+    getTeamPointsCount(seasonId),
   ]);
 
   return {
+    seasonId: seasonId ?? null,
     eliminationPoints,
+    teamPointsCount,
     placementRules,
   };
 }
 
-export async function getPlacementPointsForPlacement(placement: number): Promise<number> {
-  const rules = await getPlacementScoringRules();
+export async function getPlacementPointsForPlacement(placement: number, seasonId?: number | null): Promise<number> {
+  const rules = await getPlacementScoringRules(seasonId);
   const rule = rules.find(
     (entry) => placement >= entry.min_place && placement <= entry.max_place,
   );
@@ -60,51 +86,62 @@ export async function getPlacementPointsForPlacement(placement: number): Promise
   return rule?.points ?? 0;
 }
 
-export async function saveScoringConfig({ eliminationPoints, placementRules }: ScoringConfig): Promise<void> {
-  const { data: existingRules, error: lookupError } = await supabase
-    .from("scoring_rules")
-    .select("id, elimination_points")
-    .order("id", { ascending: true })
-    .limit(1);
-
-  if (lookupError) {
-    throw lookupError;
+export async function saveScoringConfig({ seasonId, eliminationPoints, teamPointsCount, placementRules }: ScoringConfig): Promise<void> {
+  if (seasonId === undefined || seasonId === null) {
+    throw new Error("A season must be selected before saving scoring rules.");
   }
 
-  if ((existingRules ?? []).length > 0) {
+  const normalizedTeamPointsCount = Math.max(1, Number.isFinite(teamPointsCount) ? Math.trunc(teamPointsCount) : 4);
+  const existingRule = await getScoringRuleRow(seasonId);
+
+  const scoringPayload = {
+    season_id: seasonId,
+    elimination_points: Number(eliminationPoints),
+    team_points_count: normalizedTeamPointsCount,
+  };
+
+  if (existingRule) {
     const { error } = await supabase
       .from("scoring_rules")
-      .update({ elimination_points: eliminationPoints })
-      .eq("id", existingRules[0].id);
+      .update(scoringPayload)
+      .eq("id", existingRule.id);
 
     if (error) {
       throw error;
     }
   } else {
-    const { error } = await supabase
-      .from("scoring_rules")
-      .insert({ elimination_points: eliminationPoints });
+    const { error } = await supabase.from("scoring_rules").insert(scoringPayload);
 
     if (error) {
       throw error;
     }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("placement_scoring")
+    .delete()
+    .eq("season_id", seasonId);
+
+  if (deleteError) {
+    throw deleteError;
   }
 
   if (placementRules.length === 0) {
     return;
   }
 
-  const results = await Promise.all(
-    placementRules.map((rule) =>
-      supabase
-        .from("placement_scoring")
-        .update({ points: rule.points })
-        .eq("id", rule.id),
-    ),
-  );
+  const { error: insertError } = await supabase
+    .from("placement_scoring")
+    .insert(
+      placementRules.map((rule) => ({
+        season_id: seasonId,
+        min_place: rule.min_place,
+        max_place: rule.max_place,
+        points: rule.points,
+      })),
+    );
 
-  const failedResult = results.find((result) => result.error);
-  if (failedResult?.error) {
-    throw failedResult.error;
+  if (insertError) {
+    throw insertError;
   }
 }

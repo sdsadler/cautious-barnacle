@@ -47,7 +47,7 @@ export default async function PlayerPage({
     Number.isFinite(value) ? value.toFixed(2) : "N/A";
 
   return (
-    <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+    <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center gap-3">
           <Link

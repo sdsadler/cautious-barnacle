@@ -26,8 +26,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="admin-shell min-h-screen bg-[#121212] text-white">
-      <header className="border-b border-[#2b2b2b] bg-[#171717] shadow-lg shadow-black/10">
+    <div className="admin-shell min-h-screen bg-[#1f1f1f] text-white">
+      <header className="border-b border-[#383838] bg-[#262626] shadow-lg shadow-black/10">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-sm font-medium text-[#d1c905] underline">
@@ -46,8 +46,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:px-8">
-        <aside className="admin-sidebar hidden w-72 shrink-0 rounded-2xl border border-[#2b2b2b] bg-[#171717] p-4 shadow-lg shadow-black/10 lg:block">
-          <div className="mb-4 border-b border-[#2b2b2b] pb-3">
+        <aside className="admin-sidebar hidden w-72 shrink-0 rounded-2xl border border-[#383838] bg-[#262626] p-4 shadow-lg shadow-black/10 lg:block">
+          <div className="mb-4 border-b border-[#383838] pb-3">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#d1c905]">Navigation</p>
           </div>
           <nav className="space-y-1">
@@ -55,7 +55,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link
                 key={item.href}
                 href={item.href}
-                className="admin-nav-link block rounded-md px-3 py-2 text-sm font-medium text-[#f5f5f5] transition hover:bg-[#222222] hover:text-white"
+                className="admin-nav-link block rounded-md px-3 py-2 text-sm font-medium text-[#f5f5f5] transition hover:bg-[#303030] hover:text-white"
               >
                 {item.label}
               </Link>

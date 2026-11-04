@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import AdminStatusBanner from "@/app/admin/components/AdminStatusBanner";
+import {
+  getEliminationPoints,
+  getPlacementScoringRules,
+  getScoringRuleRow,
+} from "@/lib/scoring";
 import { resolveCurrentSeasonFromDate } from "@/lib/standings";
 import { supabase } from "@/lib/supabase";
 import { upsertUnmatchedResult } from "@/lib/unmatched-results";
@@ -341,29 +346,27 @@ export default function UploadResultsPage() {
 
   const calculatePlacementPoints =
     async (
-      placement: number
+      placement: number,
+      seasonId?: number | null,
     ) => {
-      const { data, error } =
-        await supabase
-          .from("placement_scoring")
-          .select("*");
-
-      if (error) {
-        throw error;
+      if (seasonId === undefined || seasonId === null) {
+        throw new Error("A valid season is required to calculate placement points.");
       }
 
-      const scoringRule =
-        data.find(
-          (rule) =>
-            placement >=
-              rule.min_place &&
-            placement <=
-              rule.max_place
-        );
+      const scoringRules = await getPlacementScoringRules(seasonId);
+      if (scoringRules.length === 0) {
+        throw new Error(`No placement rules are configured for season ${seasonId}.`);
+      }
 
-      return (
-        scoringRule?.points ?? 0
+      const scoringRule = scoringRules.find(
+        (rule) => placement >= rule.min_place && placement <= rule.max_place,
       );
+
+      if (!scoringRule) {
+        throw new Error(`No placement points rule exists for placement ${placement} in season ${seasonId}.`);
+      }
+
+      return scoringRule.points;
     };
 
   const importResults = async () => {
@@ -384,6 +387,17 @@ export default function UploadResultsPage() {
       if (!selectedSeason) {
         setStatus("Please select a season.", "error");
         return;
+      }
+
+      const seasonId = Number(selectedSeason);
+      const scoringRule = await getScoringRuleRow(seasonId);
+      if (!scoringRule) {
+        throw new Error("No scoring rules are configured for the selected season.");
+      }
+
+      const placementRules = await getPlacementScoringRules(seasonId);
+      if (placementRules.length === 0) {
+        throw new Error("No placement rules are configured for the selected season.");
       }
 
       if (!selectedEvent) {
@@ -479,12 +493,14 @@ export default function UploadResultsPage() {
 
         const placementPoints =
           await calculatePlacementPoints(
-            placement
+            placement,
+            seasonId,
           );
 
+        const eliminationPoints = await getEliminationPoints(seasonId);
         const totalPoints =
           placementPoints +
-          eliminations;
+          eliminations * eliminationPoints;
 
         let player = null;
 

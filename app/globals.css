@@ -41,12 +41,12 @@
 }
 
 :root {
-  --background: #121212;
+  --background: #1f1f1f;
   --foreground: #f5f5f5;
   --gold: #d1c905;
-  --panel: #1a1a1a;
-  --panel-alt: #222222;
-  --panel-muted: #2b2b2b;
+  --panel: #252525;
+  --panel-alt: #2c2c2c;
+  --panel-muted: #363636;
   --font-bebas: "Bebas Neue", Arial, sans-serif;
   --font-noto-sans: "Noto Sans", Arial, sans-serif;
 }
@@ -83,7 +83,7 @@ h6 {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: #1b1b1b;
+  background: #262626;
   border-radius: 0.75rem;
   overflow: hidden;
 }
@@ -96,7 +96,7 @@ h6 {
 }
 
 .standings-table thead th {
-  background: #171717;
+  background: #222222;
   color: #f7f7f7;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
@@ -104,15 +104,15 @@ h6 {
 }
 
 .standings-table tbody tr:nth-child(odd) {
-  background: #1d1d1d;
+  background: #292929;
 }
 
 .standings-table tbody tr:nth-child(even) {
-  background: #2a2a2a;
+  background: #323232;
 }
 
 .standings-table tbody tr:hover {
-  background: #2d2a10;
+  background: #3a3718;
 }
 
 .admin-shell input,
@@ -129,12 +129,12 @@ h6 {
 .admin-shell .admin-nav-link:hover,
 .admin-shell .admin-nav-link:focus-visible {
   color: #ffffff;
-  background: #222222;
+  background: #303030;
 }
 
 .admin-shell {
   color-scheme: dark;
-  background: #121212;
+  background: #1f1f1f;
   color: #f5f5f5;
 }
 
@@ -173,22 +173,22 @@ h6 {
   color: #f2ec80;
 }
 
-.admin-shell [class*="bg-white"],
-.admin-shell [class*="bg-slate-"],
-.admin-shell [class*="bg-emerald-"],
-.admin-shell [class*="bg-rose-"],
-.admin-shell [class*="bg-red-"],
-.admin-shell [class*="bg-sky-"],
-.admin-shell [class*="bg-blue-"],
-.admin-shell [class*="bg-violet-"],
-.admin-shell [class*="bg-cyan-"],
-.admin-shell [class*="bg-fuchsia-"],
-.admin-shell [class*="bg-indigo-"],
-.admin-shell [class*="bg-amber-"],
-.admin-shell [class*="bg-gray-"],
-.admin-shell [class*="bg-zinc-"],
-.admin-shell [class*="bg-neutral-"] {
-  background-color: #171717 !important;
+.admin-shell [class*="bg-white"]:not(button),
+.admin-shell [class*="bg-slate-"]:not(button),
+.admin-shell [class*="bg-emerald-"]:not(button),
+.admin-shell [class*="bg-rose-"]:not(button),
+.admin-shell [class*="bg-red-"]:not(button),
+.admin-shell [class*="bg-sky-"]:not(button),
+.admin-shell [class*="bg-blue-"]:not(button),
+.admin-shell [class*="bg-violet-"]:not(button),
+.admin-shell [class*="bg-cyan-"]:not(button),
+.admin-shell [class*="bg-fuchsia-"]:not(button),
+.admin-shell [class*="bg-indigo-"]:not(button),
+.admin-shell [class*="bg-amber-"]:not(button),
+.admin-shell [class*="bg-gray-"]:not(button),
+.admin-shell [class*="bg-zinc-"]:not(button),
+.admin-shell [class*="bg-neutral-"]:not(button) {
+  background-color: #252525 !important;
 }
 
 .admin-shell .rounded,
@@ -210,7 +210,7 @@ h6 {
 .admin-shell [class*="border-gray-"],
 .admin-shell [class*="border-zinc-"],
 .admin-shell [class*="border-neutral-"] {
-  border-color: #2b2b2b !important;
+  border-color: #383838 !important;
 }
 
 .admin-shell table,
@@ -218,14 +218,14 @@ h6 {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: #1b1b1b;
+  background: #262626;
   border-radius: 0.75rem;
   overflow: hidden;
 }
 
 .admin-shell thead th,
 .admin-shell .admin-main thead th {
-  background: #171717;
+  background: #222222;
   color: #f7f7f7;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
@@ -243,23 +243,23 @@ h6 {
 
 .admin-shell tbody tr:nth-child(odd),
 .admin-shell .admin-main tbody tr:nth-child(odd) {
-  background: #1d1d1d;
+  background: #292929;
 }
 
 .admin-shell tbody tr:nth-child(even),
 .admin-shell .admin-main tbody tr:nth-child(even) {
-  background: #2a2a2a;
+  background: #323232;
 }
 
 .admin-shell tbody tr:hover,
 .admin-shell .admin-main tbody tr:hover {
-  background: #2d2a10;
+  background: #3a3718;
 }
 
 .admin-shell input,
 .admin-shell select,
 .admin-shell textarea {
-  background: #101010;
+  background: #181818;
   color: #ffffff;
   border: 1px solid #3a3a3a;
   border-radius: 0.5rem;
@@ -272,16 +272,44 @@ h6 {
 }
 
 .admin-shell button,
+.admin-shell button[class],
 .admin-shell .admin-main button,
 .admin-shell form button {
+  border: 1px solid #a69f00;
+  border-color: #a69f00 !important;
   border-radius: 0.5rem;
-  transition: opacity 0.2s ease;
+  background-color: #d1c905 !important;
+  color: #000000 !important;
+  font-weight: 600;
+  padding: 0.625rem 1rem;
+  line-height: 1.2;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 10px 22px rgba(0, 0, 0, 0.22);
+  transition: opacity 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-shell button:hover,
 .admin-shell .admin-main button:hover,
 .admin-shell form button:hover {
-  opacity: 0.94;
+  opacity: 1;
+  filter: brightness(1.05);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 12px 26px rgba(0, 0, 0, 0.28);
+}
+
+.admin-shell button[class*="bg-red-"],
+.admin-shell button[class*="text-red-"] {
+  background-color: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+}
+
+.admin-shell button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.admin-shell button:disabled:hover {
+  filter: none;
 }
 
 .admin-shell .text-slate-500,

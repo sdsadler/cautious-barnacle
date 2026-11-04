@@ -4,10 +4,20 @@ export type DependencyCounts = {
   eventCount: number;
   matchCount: number;
   resultCount: number;
+  teamCount: number;
+  playerRegistrationCount: number;
+  scoringRuleCount: number;
+  placementRuleCount: number;
 };
 
 export function hasDependentRecords(counts: DependencyCounts): boolean {
-  return counts.eventCount > 0 || counts.matchCount > 0 || counts.resultCount > 0;
+  return (
+    counts.eventCount > 0 ||
+    counts.matchCount > 0 ||
+    counts.resultCount > 0 ||
+    counts.teamCount > 0 ||
+    counts.playerRegistrationCount > 0
+  );
 }
 
 export function buildDependencyBlockedMessage(
@@ -28,11 +38,19 @@ export function buildDependencyBlockedMessage(
     details.push(`${counts.resultCount} result(s)`);
   }
 
+  if (counts.teamCount > 0) {
+    details.push(`${counts.teamCount} team(s)`);
+  }
+
+  if (counts.playerRegistrationCount > 0) {
+    details.push(`${counts.playerRegistrationCount} player registration(s)`);
+  }
+
   return `Cannot delete this ${entityName} because it still has ${details.join(", ")}.`;
 }
 
 export function formatDependencyCounts(counts: DependencyCounts): string {
-  return `${counts.eventCount} events • ${counts.matchCount} matches • ${counts.resultCount} results`;
+  return `${counts.eventCount} events • ${counts.matchCount} matches • ${counts.resultCount} results • ${counts.teamCount} teams • ${counts.playerRegistrationCount} player registrations`;
 }
 
 export type MatchDependencySummary = {
@@ -146,5 +164,9 @@ export async function getEventDependencySummary(eventId: number): Promise<Depend
     eventCount: 0,
     matchCount: matchIds.length,
     resultCount,
+    teamCount: 0,
+    playerRegistrationCount: 0,
+    scoringRuleCount: 0,
+    placementRuleCount: 0,
   };
 }

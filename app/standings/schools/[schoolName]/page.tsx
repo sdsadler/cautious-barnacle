@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import StandingsFilterForm from "@/components/StandingsFilterForm";
+import { getTeamPointsCount } from "@/lib/scoring";
 import { getSchoolRosterForSeason, resolveStandingsScope } from "@/lib/standings";
 
 export default async function SchoolDetailPage({
@@ -25,7 +26,7 @@ export default async function SchoolDetailPage({
 
   if (!season) {
     return (
-      <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+      <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
         <div className="mx-auto max-w-6xl">
           <EmptyState
             title="No season available"
@@ -38,22 +39,26 @@ export default async function SchoolDetailPage({
     );
   }
 
-  let school;
-  try {
-    school = await getSchoolRosterForSeason(
-      schoolName,
-      season.id,
-      selectedEventId,
-      selectedMatchId,
-    );
-  } catch {
-    notFound();
-  }
+  const [school, teamPointsCount] = await Promise.all([
+    (async () => {
+      try {
+        return await getSchoolRosterForSeason(
+          schoolName,
+          season.id,
+          selectedEventId,
+          selectedMatchId,
+        );
+      } catch {
+        notFound();
+      }
+    })(),
+    getTeamPointsCount(season.id),
+  ]);
 
   const filterQuery = `?season=${season.id}${selectedEventId ? `&event=${selectedEventId}` : ""}${selectedMatchId ? `&match=${selectedMatchId}` : ""}`;
 
   return (
-    <main className="min-h-screen bg-[#121212] px-4 py-8 text-white md:px-8">
+    <main className="min-h-screen bg-[#1f1f1f] px-4 py-8 text-white md:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center gap-3">
           <Link
@@ -122,7 +127,7 @@ export default async function SchoolDetailPage({
                     <th className="text-right">Elims</th>
                   </tr>
                 </thead>
-
+ 
                 <tbody>
                   {team.members.map((member) => (
                     <tr key={member.playerId}>
@@ -137,6 +142,10 @@ export default async function SchoolDetailPage({
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="mt-3 text-sm text-[#d9d9d9]">
+              Team points are based on the top {teamPointsCount} players on this team.
             </div>
           </div>
         ))}

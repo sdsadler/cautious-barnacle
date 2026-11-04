@@ -5,6 +5,8 @@ import {
 } from "@/lib/admin-dependency-guards";
 import { supabase } from "@/lib/supabase";
 
+type SeasonSupabaseClient = typeof supabase;
+
 export type SeasonRecord = {
   id: number;
   name: string;
@@ -18,6 +20,10 @@ export type SeasonDependencySummary = {
   eventCount: number;
   matchCount: number;
   resultCount: number;
+  teamCount: number;
+  playerRegistrationCount: number;
+  scoringRuleCount: number;
+  placementRuleCount: number;
 };
 
 export type SeasonEventSummary = {
@@ -57,19 +63,45 @@ export function validateSeasonInput(input: {
 
 export async function countDependentRecordsForSeason(
   seasonId: number,
+  client: SeasonSupabaseClient = supabase,
 ): Promise<SeasonDependencySummary> {
-  const { data: eventData, error: eventError } = await supabase
-    .from("events")
-    .select("id")
-    .eq("season_id", seasonId);
+  const [
+    { data: eventData, error: eventError },
+    { data: teamData, error: teamError },
+    { data: registrationData, error: registrationError },
+    { data: scoringRuleData, error: scoringRuleError },
+    { data: placementRuleData, error: placementRuleError },
+  ] = await Promise.all([
+    client.from("events").select("id").eq("season_id", seasonId),
+    client.from("teams").select("id").eq("season_id", seasonId),
+    client.from("player_registrations").select("id").eq("season_id", seasonId),
+    client.from("scoring_rules").select("id").eq("season_id", seasonId),
+    client.from("placement_scoring").select("id").eq("season_id", seasonId),
+  ]);
 
   if (eventError) {
     throw eventError;
   }
 
+  if (teamError) {
+    throw teamError;
+  }
+
+  if (registrationError) {
+    throw registrationError;
+  }
+
+  if (scoringRuleError) {
+    throw scoringRuleError;
+  }
+
+  if (placementRuleError) {
+    throw placementRuleError;
+  }
+
   const eventIds = (eventData ?? []).map((event) => event.id);
 
-  const { data: matchData, error: matchError } = await supabase
+  const { data: matchData, error: matchError } = await client
     .from("matches")
     .select("id, event_id")
     .in("event_id", eventIds.length > 0 ? eventIds : [0]);
@@ -80,7 +112,7 @@ export async function countDependentRecordsForSeason(
 
   const matchIds = (matchData ?? []).map((match) => match.id);
 
-  const { data: resultData, error: resultError } = await supabase
+  const { data: resultData, error: resultError } = await client
     .from("results")
     .select("id")
     .in("match_id", matchIds.length > 0 ? matchIds : [0]);
@@ -93,11 +125,18 @@ export async function countDependentRecordsForSeason(
     eventCount: eventIds.length,
     matchCount: matchIds.length,
     resultCount: resultData?.length ?? 0,
+    teamCount: teamData?.length ?? 0,
+    playerRegistrationCount: registrationData?.length ?? 0,
+    scoringRuleCount: scoringRuleData?.length ?? 0,
+    placementRuleCount: placementRuleData?.length ?? 0,
   };
 }
 
-export async function getSeasonDependencySummary(seasonId: number): Promise<SeasonDependencySummary> {
-  return countDependentRecordsForSeason(seasonId);
+export async function getSeasonDependencySummary(
+  seasonId: number,
+  client: SeasonSupabaseClient = supabase,
+): Promise<SeasonDependencySummary> {
+  return countDependentRecordsForSeason(seasonId, client);
 }
 
 export async function getSeasons(): Promise<SeasonRecord[]> {
@@ -116,6 +155,7 @@ export async function getSeasons(): Promise<SeasonRecord[]> {
 export async function ensureSeasonNameIsUnique(
   name: string,
   currentSeasonId?: number | null,
+  client: SeasonSupabaseClient = supabase,
 ): Promise<boolean> {
   const trimmedName = name.trim();
 
@@ -123,7 +163,7 @@ export async function ensureSeasonNameIsUnique(
     return false;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("seasons")
     .select("id")
     .ilike("name", trimmedName)
@@ -144,8 +184,11 @@ export async function ensureSeasonNameIsUnique(
   return data.every((season) => season.id === currentSeasonId);
 }
 
-export async function activateSeason(seasonId: number): Promise<void> {
-  const { error: deactivateError } = await supabase
+export async function activateSeason(
+  seasonId: number,
+  client: SeasonSupabaseClient = supabase,
+): Promise<void> {
+  const { error: deactivateError } = await client
     .from("seasons")
     .update({ active: false })
     .neq("id", seasonId);
@@ -154,30 +197,123 @@ export async function activateSeason(seasonId: number): Promise<void> {
     throw deactivateError;
   }
 
-  const { error: activateError } = await supabase
+  const { data: activatedRows, error: activateError } = await client
     .from("seasons")
     .update({ active: true })
-    .eq("id", seasonId);
+    .eq("id", seasonId)
+    .select("id");
 
   if (activateError) {
     throw activateError;
   }
+
+  if (!activatedRows || activatedRows.length === 0) {
+    throw new Error(`Unable to activate season with id ${seasonId}.`);
+  }
 }
 
-export async function setSeasonActiveState(seasonId: number, active: boolean): Promise<void> {
+export async function setSeasonActiveState(
+  seasonId: number,
+  active: boolean,
+  client: SeasonSupabaseClient = supabase,
+): Promise<void> {
   if (active) {
-    await activateSeason(seasonId);
+    await activateSeason(seasonId, client);
     return;
   }
 
-  const { error } = await supabase
+  const { data: deactivatedRows, error } = await client
     .from("seasons")
     .update({ active: false })
-    .eq("id", seasonId);
+    .eq("id", seasonId)
+    .select("id");
 
   if (error) {
     throw error;
   }
+
+  if (!deactivatedRows || deactivatedRows.length === 0) {
+    throw new Error(`Unable to deactivate season with id ${seasonId}.`);
+  }
+}
+
+const DEFAULT_SCORING_RULES = {
+  eliminationPoints: 1,
+  teamPointsCount: 4,
+};
+
+const DEFAULT_PLACEMENT_RULES = [
+  { min_place: 1, max_place: 1, points: 10 },
+  { min_place: 2, max_place: 10, points: 5 },
+  { min_place: 11, max_place: 25, points: 2 },
+  { min_place: 26, max_place: 50, points: 1 },
+];
+
+async function getCurrentSeasonScoringTemplate(client: SeasonSupabaseClient) {
+  const { data: activeSeasonData, error: activeSeasonError } = await client
+    .from("seasons")
+    .select("id")
+    .eq("active", true)
+    .order("id", { ascending: false })
+    .limit(1);
+
+  if (activeSeasonError) {
+    throw activeSeasonError;
+  }
+
+  let sourceSeasonId = activeSeasonData?.[0]?.id ?? null;
+
+  if (!sourceSeasonId) {
+    const { data: latestSeasonData, error: latestSeasonError } = await client
+      .from("seasons")
+      .select("id")
+      .order("start_date", { ascending: false })
+      .limit(1);
+
+    if (latestSeasonError) {
+      throw latestSeasonError;
+    }
+
+    sourceSeasonId = latestSeasonData?.[0]?.id ?? null;
+  }
+
+  const defaultTemplate = {
+    scoringRules: [{
+      elimination_points: DEFAULT_SCORING_RULES.eliminationPoints,
+      team_points_count: DEFAULT_SCORING_RULES.teamPointsCount,
+    }],
+    placementRules: DEFAULT_PLACEMENT_RULES,
+  };
+
+  if (!sourceSeasonId) {
+    return defaultTemplate;
+  }
+
+  const [{ data: scoringRows, error: scoringError }, { data: placementRows, error: placementError }] = await Promise.all([
+    client
+      .from("scoring_rules")
+      .select("elimination_points, team_points_count")
+      .eq("season_id", sourceSeasonId)
+      .order("id", { ascending: true }),
+    client
+      .from("placement_scoring")
+      .select("min_place, max_place, points")
+      .eq("season_id", sourceSeasonId)
+      .order("min_place", { ascending: true }),
+  ]);
+
+  if (scoringError) {
+    throw scoringError;
+  }
+
+  if (placementError) {
+    throw placementError;
+  }
+
+  return {
+    scoringRules: scoringRows && scoringRows.length > 0 ? scoringRows : defaultTemplate.scoringRules,
+    placementRules: placementRows && placementRows.length > 0 ? placementRows : defaultTemplate.placementRules,
+  };
 }
 
 export async function createSeason(input: {
@@ -185,7 +321,7 @@ export async function createSeason(input: {
   startDate: string | null;
   endDate: string | null;
   active: boolean;
-}): Promise<SeasonRecord> {
+}, client: SeasonSupabaseClient = supabase): Promise<SeasonRecord> {
   const validation = validateSeasonInput({
     name: input.name,
     startDate: input.startDate,
@@ -196,12 +332,12 @@ export async function createSeason(input: {
     throw new Error(validation.message);
   }
 
-  const unique = await ensureSeasonNameIsUnique(input.name);
+  const unique = await ensureSeasonNameIsUnique(input.name, undefined, client);
   if (!unique) {
     throw new Error("A season with this name already exists.");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("seasons")
     .insert({
       name: input.name.trim(),
@@ -216,8 +352,35 @@ export async function createSeason(input: {
     throw error;
   }
 
+  if (data?.id) {
+    const template = await getCurrentSeasonScoringTemplate(client);
+
+    const { error: scoringInsertError } = await client.from("scoring_rules").insert({
+      season_id: data.id,
+      elimination_points: Number(template.scoringRules[0]?.elimination_points ?? DEFAULT_SCORING_RULES.eliminationPoints),
+      team_points_count: Number(template.scoringRules[0]?.team_points_count ?? DEFAULT_SCORING_RULES.teamPointsCount),
+    });
+
+    if (scoringInsertError) {
+      throw scoringInsertError;
+    }
+
+    const { error: placementInsertError } = await client.from("placement_scoring").insert(
+      (template.placementRules.length > 0 ? template.placementRules : DEFAULT_PLACEMENT_RULES).map((rule) => ({
+        season_id: data.id,
+        min_place: rule.min_place,
+        max_place: rule.max_place,
+        points: rule.points,
+      })),
+    );
+
+    if (placementInsertError) {
+      throw placementInsertError;
+    }
+  }
+
   if (Boolean(input.active) && data?.id) {
-    await activateSeason(data.id);
+    await activateSeason(data.id, client);
   }
 
   return data as SeasonRecord;
@@ -231,6 +394,7 @@ export async function updateSeason(
     endDate: string | null;
     active: boolean;
   },
+  client: SeasonSupabaseClient = supabase,
 ): Promise<SeasonRecord> {
   const validation = validateSeasonInput({
     name: input.name,
@@ -243,12 +407,12 @@ export async function updateSeason(
     throw new Error(validation.message);
   }
 
-  const unique = await ensureSeasonNameIsUnique(input.name, seasonId);
+  const unique = await ensureSeasonNameIsUnique(input.name, seasonId, client);
   if (!unique) {
     throw new Error("A season with this name already exists.");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("seasons")
     .update({
       name: input.name.trim(),
@@ -265,16 +429,33 @@ export async function updateSeason(
   }
 
   if (Boolean(input.active) && data?.id) {
-    await activateSeason(data.id);
+    await activateSeason(data.id, client);
   }
 
   return data as SeasonRecord;
 }
 
-export async function deleteSeasonIfAllowed(seasonId: number): Promise<{
+export async function deleteSeasonIfAllowed(
+  seasonId: number,
+  client: SeasonSupabaseClient = supabase,
+): Promise<{
   ok: true;
 } | { ok: false; message: string }> {
-  const dependencies = await getSeasonDependencySummary(seasonId);
+  const [{ data: seasonRows, error: seasonLookupError }, dependencies] = await Promise.all([
+    client.from("seasons").select("id").eq("id", seasonId).limit(1),
+    getSeasonDependencySummary(seasonId, client),
+  ]);
+
+  if (seasonLookupError) {
+    throw seasonLookupError;
+  }
+
+  if (!seasonRows || seasonRows.length === 0) {
+    return {
+      ok: false,
+      message: `No season was found with id ${seasonId}.`,
+    };
+  }
 
   if (hasDependentRecords(dependencies)) {
     return {
@@ -283,10 +464,36 @@ export async function deleteSeasonIfAllowed(seasonId: number): Promise<{
     };
   }
 
-  const { error } = await supabase.from("seasons").delete().eq("id", seasonId);
+  const [{ error: scoringError }, { error: placementError }] = await Promise.all([
+    client.from("scoring_rules").delete().eq("season_id", seasonId),
+    client.from("placement_scoring").delete().eq("season_id", seasonId),
+  ]);
+
+  if (scoringError) {
+    throw scoringError;
+  }
+
+  if (placementError) {
+    throw placementError;
+  }
+
+
+  const { data: deletedSeasonRows, error } = await client
+    .from("seasons")
+    .delete()
+    .eq("id", seasonId)
+    .select("id");
 
   if (error) {
     throw error;
+  }
+
+
+  if (!deletedSeasonRows || deletedSeasonRows.length === 0) {
+    return {
+      ok: false,
+      message: `Unable to delete season with id ${seasonId}.`,
+    };
   }
 
   return { ok: true };

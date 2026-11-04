@@ -1,20 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { activateSeasonAction } from "@/app/admin/seasons/actions";
-import { deleteSeasonIfAllowed, getSeasonDetail, getSeasonDependencySummary } from "@/lib/seasons";
-
-async function deleteSeasonFormAction(formData: FormData) {
-  "use server";
-
-  const rawValue = String(formData.get("seasonId") ?? "");
-  const seasonId = Number(rawValue);
-
-  if (!Number.isFinite(seasonId) || seasonId <= 0) {
-    throw new Error("A valid season ID is required.");
-  }
-
-  await deleteSeasonIfAllowed(seasonId);
-}
+import {
+  activateSeasonAction,
+  deleteSeasonDetailAction,
+} from "@/app/admin/seasons/actions";
+import { getSeasonDetail, getSeasonDependencySummary } from "@/lib/seasons";
 
 export default async function SeasonDetailPage({
   params,
@@ -80,7 +70,7 @@ export default async function SeasonDetailPage({
               </button>
             </form>
           )}
-          <form action={deleteSeasonFormAction}>
+          <form action={deleteSeasonDetailAction}>
             <input type="hidden" name="seasonId" value={seasonId} />
             <button type="submit" className="border rounded px-3 py-2 text-sm text-red-700 border-red-200 bg-red-50">
               Delete season
