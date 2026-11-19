@@ -102,7 +102,7 @@ export default function UnmatchedResultsPage() {
           )
         `)
         .eq("resolved", false)
-        .order("id");
+        .order("username", { ascending: true });
 
     if (unmatchedError) {
       setStatus(unmatchedError.message, "error");
@@ -307,12 +307,12 @@ export default function UnmatchedResultsPage() {
                 Match
               </th>
 
-              <th className="border p-2">
-                Placement
+              <th className="border p-2 whitespace-nowrap">
+                Place
               </th>
 
-              <th className="border p-2">
-                Eliminations
+              <th className="border p-2 whitespace-nowrap">
+                Elims
               </th>
 
               <th className="border p-2">
@@ -323,7 +323,7 @@ export default function UnmatchedResultsPage() {
                 Suggestions
               </th>
 
-              <th className="border p-2">
+              <th className="border p-2 min-w-48">
                 Assign Player
               </th>
 
@@ -434,7 +434,7 @@ export default function UnmatchedResultsPage() {
                       )}
                     </td>
 
-                    <td className="border p-2">
+                    <td className="border p-2 min-w-48">
                       <select
                         className="border p-1 w-full"
                         value={

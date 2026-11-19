@@ -5,7 +5,7 @@ import Papa from "papaparse";
 import AdminStatusBanner from "@/app/admin/components/AdminStatusBanner";
 import {
   getEliminationPoints,
-  getPlacementScoringRules,
+  getPlacementPointsForPlacement,
   getScoringRuleRow,
 } from "@/lib/scoring";
 import { resolveCurrentSeasonFromDate } from "@/lib/standings";
@@ -344,31 +344,6 @@ export default function UploadResultsPage() {
     }
   };
 
-  const calculatePlacementPoints =
-    async (
-      placement: number,
-      seasonId?: number | null,
-    ) => {
-      if (seasonId === undefined || seasonId === null) {
-        throw new Error("A valid season is required to calculate placement points.");
-      }
-
-      const scoringRules = await getPlacementScoringRules(seasonId);
-      if (scoringRules.length === 0) {
-        throw new Error(`No placement rules are configured for season ${seasonId}.`);
-      }
-
-      const scoringRule = scoringRules.find(
-        (rule) => placement >= rule.min_place && placement <= rule.max_place,
-      );
-
-      if (!scoringRule) {
-        throw new Error(`No placement points rule exists for placement ${placement} in season ${seasonId}.`);
-      }
-
-      return scoringRule.points;
-    };
-
   const importResults = async () => {
     try {
       setIsImporting(true);
@@ -393,11 +368,6 @@ export default function UploadResultsPage() {
       const scoringRule = await getScoringRuleRow(seasonId);
       if (!scoringRule) {
         throw new Error("No scoring rules are configured for the selected season.");
-      }
-
-      const placementRules = await getPlacementScoringRules(seasonId);
-      if (placementRules.length === 0) {
-        throw new Error("No placement rules are configured for the selected season.");
       }
 
       if (!selectedEvent) {
@@ -492,7 +462,7 @@ export default function UploadResultsPage() {
           );
 
         const placementPoints =
-          await calculatePlacementPoints(
+          await getPlacementPointsForPlacement(
             placement,
             seasonId,
           );
@@ -736,6 +706,8 @@ export default function UploadResultsPage() {
         </span>
       </div>
 
+      <AdminStatusBanner message={message} type={messageType} />
+
       {validationErrors.length > 0 && (
         <div className="mt-4 border border-red-500 bg-red-50 p-4 rounded">
           <h3 className="font-bold text-red-700 mb-2">
@@ -838,7 +810,6 @@ export default function UploadResultsPage() {
         </>
       )}
 
-      <AdminStatusBanner message={message} type={messageType} />
     </div>
   );
 }
